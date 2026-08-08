@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="20%" r="90%">
+      <stop offset="0%" stop-color="#1B2A63"/><stop offset="70%" stop-color="#0C1430"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect x="96" y="72" width="320" height="368" rx="28" fill="#243458" stroke="#14203C" stroke-width="16"/>
+  <!-- brass rods -->
+  <g stroke="#C9A24E" stroke-width="10" stroke-linecap="round">
+    <line x1="176" y1="104" x2="176" y2="408"/>
+    <line x1="256" y1="104" x2="256" y2="408"/>
+    <line x1="336" y1="104" x2="336" y2="408"/>
+  </g>
+  <!-- reckoning bar -->
+  <rect x="112" y="196" width="288" height="20" rx="6" fill="#0E1830"/>
+  <!-- heaven beads (gold = active) -->
+  <ellipse cx="176" cy="180" rx="34" ry="22" fill="#E4B54E"/>
+  <ellipse cx="256" cy="130" rx="34" ry="22" fill="#3E5A8A"/>
+  <ellipse cx="336" cy="180" rx="34" ry="22" fill="#E4B54E"/>
+  <!-- earth beads -->
+  <ellipse cx="176" cy="240" rx="34" ry="22" fill="#E4B54E"/>
+  <ellipse cx="176" cy="288" rx="34" ry="22" fill="#3E5A8A"/>
+  <ellipse cx="256" cy="240" rx="34" ry="22" fill="#E4B54E"/>
+  <ellipse cx="256" cy="288" rx="34" ry="22" fill="#E4B54E"/>
+  <ellipse cx="336" cy="288" rx="34" ry="22" fill="#3E5A8A"/>
+  <ellipse cx="336" cy="336" rx="34" ry="22" fill="#3E5A8A"/>
+  <g fill="#2a406a" opacity="0.4">
+    <circle cx="256" cy="130" r="5"/><circle cx="176" cy="288" r="5"/><circle cx="336" cy="288" r="5"/><circle cx="336" cy="336" r="5"/>
+  </g>
+</svg>

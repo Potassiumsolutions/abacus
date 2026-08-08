@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0C1430">
+<title>Abacus &mdash; Silk Road Reckoner</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Abacus">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:system-ui,'Segoe UI',Roboto,sans-serif;background:#0C1430;color:#F1E9D0;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));background:radial-gradient(140% 60% at 50% 0%,#182456 0%,#0C1430 60%)}
+.screen{flex:1;display:flex;flex-direction:column}
+.hidden{display:none!important}
+h1{font-size:40px;letter-spacing:1px;line-height:1;color:#F4DFA0}
+h2{font-size:23px;margin-bottom:4px;color:#F4DFA0}
+.tag{color:#8FA0CF;font-size:16px;margin-top:6px}
+.brand{display:flex;align-items:center;gap:12px;margin:30px 0 6px}
+.brand .beadmark{display:flex;flex-direction:column;gap:5px}
+.brand .beadmark i{display:block;height:9px;border-radius:5px;background:#E4B54E}
+.brand .beadmark i:nth-child(1){width:22px}
+.brand .beadmark i:nth-child(2){width:40px;background:#33C2AE}
+.brand .beadmark i:nth-child(3){width:30px;background:#E4B54E}
+.brand .beadmark i:nth-child(4){width:46px;background:#33C2AE}
+.stats{display:flex;gap:8px;margin:22px 0 6px}
+.stat{flex:1;background:#182450;border-radius:12px;padding:10px 6px;text-align:center;border:1px solid #2E3E72}
+.stat .v{font-size:19px;font-weight:700;color:#F4DFA0}
+.stat .l{font-size:11px;color:#8FA0CF;margin-top:2px}
+.btn{display:block;width:100%;padding:16px;border:none;border-radius:14px;font-size:18px;font-weight:700;background:#E4B54E;color:#15203E;margin-top:12px;cursor:pointer;font-family:inherit}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:#F1E9D0;border:2px solid #3B4C7E}
+.btn.gold{background:#E4B54E;color:#15203E}
+.btn.teal{background:#33C2AE;color:#08231F}
+.btn.small{padding:11px;font-size:15px;margin-top:8px}
+.row{display:flex;gap:10px}
+.row>.btn{margin-top:12px}
+.topbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#8FA0CF;margin-bottom:12px;gap:8px}
+.topbar b{color:#F1E9D0}
+#btn-back,.backb{background:none;border:none;font-size:26px;color:#8FA0CF;cursor:pointer;line-height:1;padding:0 6px}
+.goods{display:flex;gap:6px;font-size:13px}
+.goods span{background:#182450;border:1px solid #2E3E72;border-radius:20px;padding:3px 9px;white-space:nowrap}
+.goods b{color:#F4DFA0}
+.note{font-size:14px;color:#8FA0CF;text-align:center;margin:8px 0}
+.card{background:#182450;border:1px solid #2E3E72;border-radius:16px;padding:16px;margin-bottom:12px}
+.order{background:#182450;border:2px solid #34477E;border-radius:16px;padding:14px 16px;margin-bottom:10px;text-align:center}
+.order .from{font-size:13px;color:#8FA0CF}
+.order .big{font-size:15px;font-weight:600;margin:4px 0;color:#F1E9D0}
+.order .qty{font-size:34px;font-weight:800;color:#F0774C;letter-spacing:1px;line-height:1.15}
+.order .qty.expr{white-space:normal}
+.order .hint{font-size:12px;color:#8FA0CF;margin-top:4px}
+
+/* Abacus */
+.abwrap{background:#243458;border:6px solid #14203C;border-radius:14px;padding:10px 6px 6px;margin:2px 0 4px;box-shadow:inset 0 2px 10px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.3)}
+.frame{display:flex;justify-content:center;gap:0}
+.rod{position:relative;width:46px;height:300px}
+.rod::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:4px;margin-left:-2px;background:linear-gradient(#d8b458,#8a6d2a);border-radius:2px}
+.bar{position:absolute;left:-1px;right:-1px;top:92px;height:9px;background:#0E1830;border-top:1px solid #33477E;border-bottom:1px solid #05091a;z-index:1;border-radius:2px}
+.bead{position:absolute;left:2px;width:42px;height:26px;border-radius:50%/60%;background:radial-gradient(circle at 34% 32%,#6d8bc4,#3E5A8A 60%,#26375f);box-shadow:0 2px 3px rgba(0,0,0,.45),inset 0 1px 2px rgba(200,220,255,.3);transition:top .12s cubic-bezier(.4,1.3,.5,1);cursor:pointer;z-index:2}
+.bead.on{background:radial-gradient(circle at 34% 32%,#f7dc93,#E4B54E 56%,#b6872b);box-shadow:0 2px 5px rgba(228,181,78,.5),inset 0 1px 2px rgba(255,240,200,.6)}
+.bead .bv{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:11px;font-weight:800;color:rgba(214,226,255,.5);pointer-events:none}
+.bead.on .bv{color:rgba(30,24,8,.55)}
+.frame.nolbl .bv{display:none}
+.frame.nolbl .rp{display:none}
+.rv{position:absolute;left:0;right:0;top:302px;text-align:center;font-size:15px;font-weight:800;color:#F4DFA0}
+.rp{position:absolute;left:0;right:0;top:-18px;text-align:center;font-size:9px;color:#8FA0CF;letter-spacing:.3px}
+.ablegend{font-size:12px;color:#8FA0CF;text-align:center;margin:0 0 6px}
+.readout{text-align:center;font-size:15px;color:#8FA0CF;margin-bottom:4px}
+.readout b{font-size:30px;color:#F1E9D0;display:block;letter-spacing:1px}
+.msg{font-size:15px;font-weight:600;text-align:center;min-height:22px;margin:4px 0}
+.msg.ok{color:#33C2AE}
+.msg.no{color:#F0774C}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.shake{animation:shake .17s 2}
+
+/* progress */
+.prog{height:14px;background:#22315C;border-radius:8px;overflow:hidden;margin:4px 0}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#E4B54E,#33C2AE);width:0;transition:width .4s}
+.mono{font-variant-numeric:tabular-nums}
+
+/* map */
+#mapwrap{background:linear-gradient(#16224a,#0c1636);border:1px solid #2E3E72;border-radius:14px;padding:6px;margin-bottom:10px}
+#mapwrap svg{display:block;width:100%;height:auto}
+.citycard{background:#182450;border:1px solid #2E3E72;border-radius:14px;padding:14px;margin-bottom:10px}
+.citycard .meta{font-size:12px;color:#8FA0CF;margin:2px 0 8px}
+.citycard p{font-size:14px;color:#D7DCEF;line-height:1.45;margin-bottom:8px}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.badge.done{background:#12463b;color:#33C2AE}
+.badge.cur{background:#4a3a12;color:#E4B54E}
+.badge.lock{background:#26314f;color:#8FA0CF}
+
+/* monument 3D */
+#mon3d{width:100%;height:300px;border-radius:14px;background:linear-gradient(#2a3a6e,#101a3a);overflow:hidden;margin-bottom:8px}
+.mtitle{text-align:center}
+.mtitle .city{font-size:13px;color:#8FA0CF;letter-spacing:2px;text-transform:uppercase}
+
+.learn p{font-size:15px;line-height:1.5;margin-bottom:10px;color:#D7DCEF}
+.pill{display:inline-block;background:#33C2AE;color:#08231F;border-radius:6px;padding:1px 7px;font-weight:700;font-size:14px}
+.pill.e{background:#E4B54E;color:#15203E}
+.pill.m{background:#F0774C;color:#2a0f06}
+.timer{font-size:15px;font-weight:700;color:#F0774C}
+.big-final{text-align:center;padding:30px 0}
+.big-final .n{font-size:60px;font-weight:800;color:#E4B54E}
+.foot{text-align:center;font-size:11px;color:#6C7BA8;margin-top:auto;padding-top:14px}
+label.tog{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;font-size:16px;border-bottom:1px solid #2E3E72}
+.switch{width:48px;height:28px;background:#2E3E72;border-radius:16px;position:relative;transition:.2s}
+.switch.on{background:#33C2AE}
+.switch i{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s}
+.switch.on i{left:23px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HOME -->
+<div id="s-home" class="screen">
+  <div class="brand">
+    <div class="beadmark"><i></i><i></i><i></i><i></i></div>
+    <div><h1>Abacus</h1><div class="tag">Silk Road Reckoner</div></div>
+  </div>
+  <p class="note" style="text-align:left;margin:6px 2px">Master the ancient soroban &mdash; add and subtract by sliding beads, fill trade orders, and raise ten great cities from Chang&rsquo;an to Constantinople.</p>
+  <div class="stats">
+    <div class="stat"><div class="v mono" id="h-silk">0</div><div class="l">🧵 Silk</div></div>
+    <div class="stat"><div class="v mono" id="h-spice">0</div><div class="l">🌶️ Spice</div></div>
+    <div class="stat"><div class="v mono" id="h-jade">0</div><div class="l">💎 Jade</div></div>
+  </div>
+  <div class="stat" style="margin-bottom:2px;flex:0 0 auto"><div class="v" id="h-city">Chang&rsquo;an</div><div class="l">Current waystation &mdash; <span id="h-prog">0%</span> built &middot; <span id="h-rods">2</span> rods</div></div>
+  <button class="btn gold" onclick="go('trade')">Trade &amp; Reckon</button>
+  <div class="row">
+    <button class="btn ghost small" style="flex:1" onclick="go('learn')">Learn the beads</button>
+    <button class="btn ghost small" style="flex:1" onclick="startSpeed()">Speed run</button>
+  </div>
+  <button class="btn ghost small" onclick="go('map')">The caravan road</button>
+  <button class="btn ghost small" onclick="go('settings')">Settings</button>
+  <div class="foot">Abacus &mdash; Silk Road Reckoner<br>
+   Created by Paul A.T. Ramey &nbsp;&middot;&nbsp; <a href="https://www.ksoldesigns.com" target="_blank" rel="noopener" style="color:#E4B54E;text-decoration:none">www.ksoldesigns.com</a> &nbsp;&middot;&nbsp; Potassium Solutions<br>
+   &copy; 2026 Ksol Designs &middot; 3D by three.js</div>
+</div>
+
+<!-- LEARN -->
+<div id="s-learn" class="screen hidden">
+  <div class="topbar"><button id="btn-back" onclick="go('home')">&#8592;</button><b>Learn the Soroban</b><span></span></div>
+  <div class="learn">
+    <div class="card">
+      <p>Each <b>rod</b> (column) is one digit, <b>0&ndash;9</b>. Beads only count when pushed toward the middle <b>bar</b>.</p>
+      <p><span class="pill">Heaven bead</span> above the bar = <b>5</b> when slid <b>down</b>.</p>
+      <p><span class="pill e">Earth beads</span> below (four) = <b>1</b> each when slid <b>up</b>.</p>
+      <p>To <span class="pill m">add</span>, push more beads toward the bar; to <span class="pill m">subtract</span>, pull them away. Fill past 9? Carry to the rod on its left.</p>
+      <p>Later cities use simpler <b>ten-bead</b> rods &mdash; just slide up to nine beads, each worth 1.</p>
+    </div>
+    <div class="readout">This rod shows <b id="learn-val">0</b></div>
+    <div class="abwrap"><div class="frame" id="learn-frame"></div></div>
+    <p class="note" id="learn-hint">Try to show <b>7</b> (the heaven bead + two earth beads).</p>
+    <button class="btn small" onclick="learnNext()">Next target</button>
+    <button class="btn gold" onclick="go('trade')">I&rsquo;m ready &mdash; start trading</button>
+  </div>
+</div>
+
+<!-- TRADE -->
+<div id="s-trade" class="screen hidden">
+  <div class="topbar">
+    <button id="btn-back" onclick="go('home')">&#8592;</button>
+    <div class="goods"><span>🧵 <b id="t-silk" class="mono">0</b></span><span>🌶️ <b id="t-spice" class="mono">0</b></span><span>💎 <b id="t-jade" class="mono">0</b></span></div>
+    <b id="t-city">Chang&rsquo;an</b>
+  </div>
+  <div class="order">
+    <div class="from" id="t-from">A merchant needs</div>
+    <div class="big" id="t-good">bundles of silk</div>
+    <div class="qty" id="t-qty">0</div>
+    <div class="hint" id="t-hint">&nbsp;</div>
+  </div>
+  <div class="readout">Abacus shows <b id="t-cur">0</b></div>
+  <div class="abwrap"><div class="frame" id="trade-frame"></div></div>
+  <div class="ablegend" id="t-legend">&nbsp;</div>
+  <div class="msg" id="t-msg">&nbsp;</div>
+  <div class="row">
+    <button class="btn ghost small" style="flex:0 0 40%" onclick="resetTrade()">Reset</button>
+    <button class="btn teal small" style="flex:1" onclick="submitOrder()">Deliver</button>
+  </div>
+  <div class="prog"><i id="t-bar"></i></div>
+  <div class="note"><span id="t-built">0</span> / <span id="t-total">0</span> blocks of <b id="t-mon">the pagoda</b></div>
+</div>
+
+<!-- SPEED -->
+<div id="s-speed" class="screen hidden">
+  <div class="topbar"><button id="btn-back" onclick="go('home')">&#8592;</button><b>Speed Run</b><span class="timer" id="sp-time">0:60</span></div>
+  <div class="order"><div class="from" id="sp-from">Reckon as many as you can</div><div class="qty" id="sp-qty">0</div><div class="hint" id="sp-hint">&nbsp;</div></div>
+  <div class="readout">Score <b id="sp-score">0</b></div>
+  <div class="abwrap"><div class="frame" id="speed-frame"></div></div>
+  <div class="ablegend" id="sp-legend">&nbsp;</div>
+  <div class="msg" id="sp-msg">&nbsp;</div>
+  <div class="row">
+    <button class="btn ghost small" style="flex:0 0 40%" onclick="resetSpeed()">Reset</button>
+    <button class="btn teal small" style="flex:1" onclick="submitSpeed()">Submit</button>
+  </div>
+</div>
+
+<!-- SPEED DONE -->
+<div id="s-speeddone" class="screen hidden">
+  <div class="topbar"><button id="btn-back" onclick="go('home')">&#8592;</button><b>Time!</b><span></span></div>
+  <div class="big-final"><div class="n mono" id="spd-score">0</div><div class="tag">orders reckoned in 60 seconds</div></div>
+  <div class="note" id="spd-best">Best: 0</div>
+  <button class="btn gold" onclick="startSpeed()">Run again</button>
+  <button class="btn ghost" onclick="go('home')">Home</button>
+</div>
+
+<!-- MAP -->
+<div id="s-map" class="screen hidden">
+  <div class="topbar"><button class="backb" onclick="go('home')">&#8592;</button><b>The Caravan Road</b><span></span></div>
+  <div id="mapwrap"></div>
+  <p class="note" style="margin:0 0 8px">Tap a waystation to learn about it.</p>
+  <div class="citycard" id="citycard"></div>
+</div>
+
+<!-- MONUMENT 3D -->
+<div id="s-mon3d" class="screen hidden">
+  <div class="topbar"><button class="backb" onclick="go('map')">&#8592;</button><b>Monument</b><span></span></div>
+  <div class="mtitle"><div class="city" id="m-city">Chang&rsquo;an</div><h2 id="m-name">Great Wild Goose Pagoda</h2></div>
+  <div id="mon3d"></div>
+  <div class="prog"><i id="m-bar"></i></div>
+  <div class="note"><span id="m-built">0</span> / <span id="m-total">0</span> blocks raised</div>
+  <p class="note" id="m-blurb"></p>
+  <button class="btn gold" onclick="go('trade')">Fill more orders</button>
+</div>
+
+<!-- SETTINGS -->
+<div id="s-settings" class="screen hidden">
+  <div class="topbar"><button id="btn-back" onclick="go('home')">&#8592;</button><b>Settings</b><span></span></div>
+  <label class="tog">Sound effects<span class="switch" id="sw-sfx" onclick="toggle('sfx')"><i></i></span></label>
+  <label class="tog">Show number labels<span class="switch" id="sw-lbl" onclick="toggle('labels')"><i></i></span></label>
+  <div class="card" style="margin-top:16px">
+    <p class="note" style="margin:0 0 8px">Reset all trade progress and rebuild every city from scratch?</p>
+    <button class="btn ghost small" style="border-color:#F0774C;color:#F0774C" onclick="resetAll()">Reset caravan</button>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2 style="font-size:18px;margin-bottom:8px">Credits</h2>
+    <p class="note" style="text-align:left;margin:0 0 6px">Design, code &amp; artwork by <b>Paul A.T. Ramey</b></p>
+    <p class="note" style="text-align:left;margin:0 0 6px">Ksol Designs &middot; Potassium Solutions &middot; Kiki&rsquo;s Custom Engraving</p>
+    <p class="note" style="text-align:left;margin:0 0 6px">3D monuments powered by <b>three.js</b> (r128)</p>
+    <p class="note" style="text-align:left;margin:0 0 6px">Beads worth 5 above, 1 below &mdash; just like 500 BCE.</p>
+    <p class="note" style="text-align:left;margin:0">
+      <a href="https://www.ksoldesigns.com" target="_blank" rel="noopener" style="color:#E4B54E;text-decoration:none">www.ksoldesigns.com</a> &middot;
+      <a href="mailto:Paul@ksoldesigns.com" style="color:#E4B54E;text-decoration:none">Paul@ksoldesigns.com</a> &middot;
+      <a href="https://www.patreon.com/KsolDesigns" target="_blank" rel="noopener" style="color:#E4B54E;text-decoration:none">Patreon</a>
+    </p>
+  </div>
+  <div class="foot">&copy; 2026 Ksol Designs &middot; Abacus &mdash; Silk Road Reckoner</div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---------- state ---------- */
+const LS='abacus_silkroad_v1';
+let S=Object.assign({silk:0,spice:0,jade:0,city:0,built:[],speedBest:0,sfx:true,labels:true},JSON.parse(localStorage.getItem(LS)||'{}'));
+function save(){localStorage.setItem(LS,JSON.stringify(S));}
+function rand(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+
+/* ---------- goods & cities (mx,my = map position; lx,ly,la = label) ---------- */
+const GOODS=[["silk","🧵"],["spice","🌶️"],["jade","💎"]];
+const CITIES=[
+ {city:"Chang’an",name:"Great Wild Goose Pagoda",good:0,digits:2,build:pagoda,mx:322,my:150,lx:316,ly:150,la:"end",
+  blurb:"The eastern gate of the Silk Road. From here the caravans set out west, laden with bolts of silk."},
+ {city:"Dunhuang",name:"Mogao Grotto Shrine",good:1,digits:2,build:grotto,mx:268,my:74,lx:268,ly:64,la:"middle",
+  blurb:"Oasis of the singing sands, where cave-temples were carved into the cliff for a thousand years."},
+ {city:"Turfan",name:"Emin Minaret",good:1,digits:3,build:eminTower,mx:240,my:30,lx:240,ly:22,la:"middle",
+  blurb:"A sunken oasis below sea level, cooled by hidden karez channels. Its brick minaret tapers to the sky."},
+ {city:"Kashgar",name:"Caravanserai Gate",good:0,digits:3,build:caravanserai,mx:196,my:74,lx:196,ly:64,la:"middle",
+  blurb:"The great crossroads. Traders from every land rest here beneath the arched gate before the mountains."},
+ {city:"Samarkand",name:"Registan Portal",good:2,digits:4,build:registan,mx:164,my:56,lx:164,ly:47,la:"middle",
+  blurb:"Jewel of Transoxiana. Its tiled dome and towering portal blaze turquoise under the desert sun."},
+ {city:"Bukhara",name:"Kalyan Minaret",good:1,digits:4,build:kalyan,mx:150,my:86,lx:158,ly:90,la:"start",
+  blurb:"The holy city of a hundred domes. Even conquerors spared the great Kalyan tower for its beauty."},
+ {city:"Merv",name:"Round City of Merv",good:2,digits:5,build:roundcity,mx:126,my:112,lx:120,ly:114,la:"end",
+  blurb:"The mother of the world — a vast circular city whose ring-walls guard a central dome."},
+ {city:"Samarra",name:"Malwiya Spiral",good:0,digits:5,build:malwiya,mx:78,my:154,lx:78,ly:168,la:"middle",
+  blurb:"On the Tigris rises a minaret like a coiled shell — a spiral ramp climbing to the call of prayer."},
+ {city:"Damascus",name:"Umayyad Mosque",good:1,digits:6,build:umayyad,mx:50,my:172,lx:52,ly:186,la:"middle",
+  blurb:"Ancient capital of caravans and coin, its marble courtyard shimmering with golden mosaics."},
+ {city:"Constantinople",name:"Hagia Sophia",good:2,digits:6,build:hagia,mx:22,my:66,lx:16,ly:58,la:"start",
+  blurb:"Journey’s end at the golden horn. Its great dome seems to hang from heaven itself."}
+];
+
+/* ---------- voxel builders ---------- */
+function vbox(a,x0,x1,y0,y1,z0,z1){for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++)a.push([x,y,z]);}
+function ring(a,cx,cz,r,y,fill){const R=Math.ceil(r);for(let x=-R;x<=R;x++)for(let z=-R;z<=R;z++){const d=Math.hypot(x,z);if((fill&&d<=r)||(!fill&&d<=r&&d>r-1.15))a.push([cx+x,y,cz+z]);}}
+function dedupe(a){const s=new Set(),o=[];for(const v of a){const k=v.map(n=>Math.round(n)).join(',');if(!s.has(k)){s.add(k);o.push([Math.round(v[0]),Math.round(v[1]),Math.round(v[2])]);}}return o;}
+function sortY(a){return a.sort((p,q)=>(p[1]-q[1])||(Math.hypot(p[0],p[2])-Math.hypot(q[0],q[2])));}
+
+function pagoda(){const a=[];vbox(a,-3,3,0,0,-3,3);let y=1;
+ [[2,3],[2,3],[1,2]].forEach(([bh,rh])=>{
+   for(let x=-bh;x<=bh;x++)for(let z=-bh;z<=bh;z++)if(Math.abs(x)===bh||Math.abs(z)===bh)vbox(a,x,x,y,y+1,z,z);
+   y+=2;for(let x=-rh;x<=rh;x++)for(let z=-rh;z<=rh;z++)a.push([x,y,z]);y+=1;});
+ vbox(a,0,0,y,y+2,0,0);a.push([0,y+3,0]);return sortY(dedupe(a));}
+function grotto(){const a=[];vbox(a,-4,4,0,4,2,3);
+ for(let cx=-3;cx<=3;cx+=3){vbox(a,cx-1,cx+1,1,2,1,1);a.push([cx,3,1]);}
+ vbox(a,-1,1,0,0,-2,-1);ring(a,0,-1,1.4,1,true);ring(a,0,-1,1.1,2,true);a.push([0,3,-1],[0,4,-1]);
+ return sortY(dedupe(a));}
+function eminTower(){const a=[];vbox(a,-3,3,0,0,-3,3);
+ for(let y=1;y<=10;y++){const r=Math.max(1,3.2-y*0.22);ring(a,0,0,r,y,false);}
+ ring(a,0,0,1.3,11,true);a.push([0,12,0],[0,13,0]);return sortY(dedupe(a));}
+function caravanserai(){const a=[];
+ vbox(a,-4,-3,0,5,-1,1);vbox(a,3,4,0,5,-1,1);vbox(a,-2,2,0,0,-1,1);
+ vbox(a,-2,-2,1,3,-1,1);vbox(a,2,2,1,3,-1,1);
+ a.push([-1,4,0],[0,5,0],[1,4,0],[-2,4,0],[2,4,0]);
+ vbox(a,-4,4,6,6,-1,1);vbox(a,-4,4,7,7,0,0);for(let x=-4;x<=4;x+=2)a.push([x,8,0]);
+ return sortY(dedupe(a));}
+function registan(){const a=[];vbox(a,-4,4,0,0,-3,3);
+ vbox(a,-3,-3,1,6,-3,3);vbox(a,3,3,1,6,-3,3);vbox(a,-3,3,6,6,-3,3);
+ vbox(a,-2,2,1,1,3,3);a.push([-2,5,3],[-1,6,3]);
+ vbox(a,-4,-4,1,7,-3,-3);a.push([-4,8,-3]);vbox(a,4,4,1,7,-3,-3);a.push([4,8,-3]);
+ vbox(a,-4,-4,1,7,3,3);a.push([-4,8,3]);vbox(a,4,4,1,7,3,3);a.push([4,8,3]);
+ ring(a,0,0,3,4,true);ring(a,0,0,2.3,5,true);ring(a,0,0,1.4,6,true);a.push([0,7,0],[0,8,0]);
+ return sortY(dedupe(a));}
+function kalyan(){const a=[];
+ vbox(a,-3,3,0,0,-2,2);
+ vbox(a,-3,-1,1,5,-2,2);vbox(a,1,3,1,5,-2,2);vbox(a,-3,3,6,6,-2,2);
+ vbox(a,-2,-2,1,5,2,2);vbox(a,2,2,1,5,2,2);
+ ring(a,0,0,1.7,7,true);a.push([0,8,0]);
+ for(let y=0;y<=10;y++)ring(a,4,3,1.1,y,false);
+ ring(a,4,3,1.5,11,true);a.push([4,12,3]);
+ return sortY(dedupe(a));}
+function roundcity(){const a=[];
+ ring(a,0,0,5,0,false);ring(a,0,0,5,1,false);ring(a,0,0,5,2,false);
+ for(let k=0;k<8;k++){const x=Math.round(Math.cos(k/8*6.283)*5),z=Math.round(Math.sin(k/8*6.283)*5);a.push([x,3,z]);}
+ ring(a,0,0,2.4,0,true);ring(a,0,0,2.4,3,true);ring(a,0,0,1.6,4,true);a.push([0,5,0]);
+ return sortY(dedupe(a));}
+function malwiya(){const a=[];vbox(a,-3,3,0,0,-3,3);
+ for(let s=0;s<=46;s++){const y=1+Math.floor(s/6);const ang=s*0.85;const r=3.4-s*0.048;a.push([Math.cos(ang)*r,y,Math.sin(ang)*r]);}
+ for(let y=1;y<=8;y++)ring(a,0,0,1.0,y,true);a.push([0,9,0]);
+ return sortY(dedupe(a));}
+function umayyad(){const a=[];
+ for(let x=-5;x<=5;x++)for(let z=-2;z<=2;z++)if(Math.abs(x)===5||Math.abs(z)===2)vbox(a,x,x,0,3,z,z);
+ vbox(a,-5,5,0,0,-2,2);
+ for(let x=-4;x<=4;x+=2){vbox(a,x,x,1,2,-2,-2);a.push([x,3,-2]);}
+ ring(a,0,0,1.9,4,true);ring(a,0,0,1.1,5,true);a.push([0,6,0]);
+ vbox(a,4,5,0,7,1,2);a.push([4,8,1],[5,8,2],[5,8,1],[4,8,2]);
+ return sortY(dedupe(a));}
+function hagia(){const a=[];vbox(a,-4,4,0,1,-4,4);
+ ring(a,0,0,3.2,2,true);ring(a,0,0,3.2,3,true);
+ ring(a,0,0,2.4,4,true);ring(a,0,0,1.4,5,true);a.push([0,6,0]);
+ [[-4,-4],[4,-4],[-4,4],[4,4]].forEach(([x,z])=>{vbox(a,x,x,2,6,z,z);a.push([x,7,z]);});
+ return sortY(dedupe(a));}
+
+CITIES.forEach(c=>{c.vox=c.build();});
+function total(i){return CITIES[i].vox.length;}
+for(let i=S.built.length;i<CITIES.length;i++)S.built[i]=0;
+S.built.length=CITIES.length;S.city=Math.min(S.city||0,CITIES.length-1);
+
+/* ---------- audio ---------- */
+let AC=null;
+function tone(f,dur,type,vol,delay){if(!S.sfx)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime+(delay||0);const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(vol||0.1,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur);}catch(e){}}
+const snd={
+ clack:()=>{tone(300,0.04,'square',0.06);tone(180,0.06,'triangle',0.05,0.02);},
+ tap:()=>tone(520,0.05,'square',0.05),
+ ok:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,0.16,'sine',0.11,i*0.09));},
+ no:()=>tone(120,0.24,'sawtooth',0.11),
+ build:()=>{tone(440,0.08);tone(660,0.1,'sine',0.09,0.07);},
+ city:()=>{[392,523,659,784,1047,1319].forEach((f,i)=>tone(f,0.24,'triangle',0.12,i*0.13));}
+};
+
+/* ---------- abacus engine (soroban 5/4  OR  ten-bead) ---------- */
+let ABN=2, ABLAYOUT='soroban', rodVals=[], activeFrame=null, onValue=null;
+function layoutFor(digits){return digits<=3?'soroban':'ten';}
+function buildAbacus(frameEl,n,layout){
+ ABN=n;ABLAYOUT=layout||'soroban';rodVals=new Array(n).fill(0);activeFrame=frameEl;
+ frameEl.className='frame'+(S.labels?'':' nolbl');frameEl.innerHTML='';
+ for(let r=0;r<n;r++){
+  const rod=document.createElement('div');rod.className='rod';
+  const pl=n-1-r;
+  const rp='<div class="rp">'+(pl===0?'ones':pl===1?'tens':pl===2?'100s':pl===3?'1000s':pl===4?'10k':'100k')+'</div>';
+  if(ABLAYOUT==='ten'){
+   let beads='';for(let i=0;i<10;i++)beads+='<div class="bead"><span class="bv">1</span></div>';
+   rod.innerHTML=rp+beads+'<div class="rv">0</div>';
+   rod.querySelectorAll('.bead').forEach((b,p)=>{b.onclick=()=>{rodVals[r]=(p<rodVals[r])?p:Math.min(9,p+1);snd.clack();updateRod(r);fireValue();};});
+  }else{
+   rod.innerHTML=rp+'<div class="bead heaven"><span class="bv">5</span></div><div class="bar"></div>'+
+     '<div class="bead earth"><span class="bv">1</span></div><div class="bead earth"><span class="bv">1</span></div><div class="bead earth"><span class="bv">1</span></div><div class="bead earth"><span class="bv">1</span></div>'+
+     '<div class="rv">0</div>';
+   rod.querySelector('.heaven').onclick=()=>{const e=rodVals[r]%5;rodVals[r]=(rodVals[r]>=5?0:5)+e;snd.clack();updateRod(r);fireValue();};
+   rod.querySelectorAll('.earth').forEach((b,p)=>{b.onclick=()=>{const h=rodVals[r]>=5?5:0;const earth=rodVals[r]%5;rodVals[r]=h+(p<earth?p:p+1);snd.clack();updateRod(r);fireValue();};});
+  }
+  frameEl.appendChild(rod);updateRod(r);
+ }
+}
+function updateRod(r){
+ const rod=activeFrame.children[r];const v=rodVals[r];
+ if(ABLAYOUT==='ten'){
+  rod.querySelectorAll('.bead').forEach((b,i)=>{const on=i<v;b.style.top=(on?4+i*26:300-(10-i)*26)+'px';b.classList.toggle('on',on);});
+ }else{
+  const heaven=v>=5,earth=v%5;
+  const hb=rod.querySelector('.heaven');hb.style.top=(heaven?54:6)+'px';hb.classList.toggle('on',heaven);
+  rod.querySelectorAll('.earth').forEach((b,i)=>{const on=i<earth;b.style.top=(on?110+i*34:290-(4-i)*34)+'px';b.classList.toggle('on',on);});
+ }
+ rod.querySelector('.rv').textContent=v;
+}
+function abacusValue(){let n=0;for(let i=0;i<ABN;i++)n=n*10+rodVals[i];return n;}
+function loadAbacus(value){const digs=String(Math.max(0,value)).padStart(ABN,'0').slice(-ABN).split('').map(Number);
+ for(let i=0;i<ABN;i++){rodVals[i]=digs[i];updateRod(i);}fireValue();}
+function fireValue(){if(onValue)onValue(abacusValue());}
+function legendText(){return ABLAYOUT==='ten'?'Ten-bead rods — each bead = 1, slide up to nine':'Soroban — bead above the bar = 5, each below = 1';}
+
+/* ---------- navigation ---------- */
+const screens=['home','learn','trade','speed','speeddone','map','mon3d','settings'];
+function go(name){screens.forEach(s=>document.getElementById('s-'+s).classList.toggle('hidden',s!==name));
+ if(name==='home')refreshHome();
+ if(name==='learn')initLearn();
+ if(name==='trade')initTrade();
+ if(name==='map')initMap();
+ if(name==='mon3d')initMon3D();
+ if(name==='settings')initSettings();
+ window.scrollTo(0,0);
+}
+function refreshHome(){
+ document.getElementById('h-silk').textContent=S.silk;
+ document.getElementById('h-spice').textContent=S.spice;
+ document.getElementById('h-jade').textContent=S.jade;
+ document.getElementById('h-city').textContent=CITIES[S.city].city;
+ document.getElementById('h-prog').textContent=Math.round(S.built[S.city]/total(S.city)*100)+'%';
+ document.getElementById('h-rods').textContent=CITIES[S.city].digits;
+}
+
+/* ---------- learn ---------- */
+let learnTarget=7;
+function initLearn(){onValue=v=>{document.getElementById('learn-val').textContent=v;
+ if(v===learnTarget){snd.ok();document.getElementById('learn-hint').innerHTML='✓ That&rsquo;s '+v+'! Tap <b>Next target</b>.';}};
+ buildAbacus(document.getElementById('learn-frame'),1,'soroban');learnSet(7);}
+function learnSet(t){learnTarget=t;document.getElementById('learn-hint').innerHTML='Try to show <b>'+t+'</b>'+(t>=5?' (heaven bead + '+(t-5)+' earth)':'');}
+function learnNext(){learnSet(rand(1,9));loadAbacus(0);document.getElementById('learn-val').textContent=0;}
+
+/* ---------- order generation ---------- */
+let opFlip=0;
+function pickKind(){const ci=S.city;
+ if(ci===0)return'set';                       // city 1: just place a number
+ if(ci>=8&&Math.random()<0.4)return'chain';   // final cities: multi-step
+ opFlip++;return(opFlip%2===1)?'add':'sub';    // otherwise alternate add / subtract
+}
+function makeOrder(digits,kind){
+ const max=Math.pow(10,digits)-1,min=Math.pow(10,digits-1),minus='−';
+ if(kind==='set'){const t=rand(min,max);return{kind,start:0,target:t,expr:''+t};}
+ if(kind==='add'){const a=rand(Math.max(1,Math.floor(min/2)),Math.floor(max*0.7));const b=rand(1,max-a);return{kind,start:a,target:a+b,expr:a+' + '+b};}
+ if(kind==='sub'){const a=rand(min,max);const b=rand(1,a-1);return{kind,start:a,target:a-b,expr:a+' '+minus+' '+b};}
+ let run=rand(min,Math.floor(max*0.6));const start=run;let expr=''+run;const n=rand(2,3);
+ for(let i=0;i<n;i++){const up=(run<max*0.45)||(run>1&&Math.random()<0.5);
+  if(up){const v=rand(1,Math.max(1,max-run));run+=v;expr+=' + '+v;}else{const v=rand(1,run-1);run-=v;expr+=' '+minus+' '+v;}}
+ return{kind:'chain',start,target:run,expr};
+}
+function storyFor(kind,city){
+ if(kind==='set')return'A merchant at '+city+' orders';
+ if(kind==='add')return'Goods arrive at '+city+' — tally the total';
+ if(kind==='sub')return'A sale at '+city+' — take away what sold';
+ return'A busy day at '+city+' — reckon it all';
+}
+
+/* ---------- trade ---------- */
+let order={};
+function newOrder(){
+ const c=CITIES[S.city];order=makeOrder(c.digits,pickKind());
+ const g=GOODS[c.good];
+ document.getElementById('t-from').textContent=storyFor(order.kind,c.city);
+ document.getElementById('t-good').innerHTML=g[1]+' bundles of '+g[0];
+ const q=document.getElementById('t-qty');q.className='qty'+(order.kind==='set'?'':' expr');
+ q.style.fontSize=order.expr.length>22?'19px':order.expr.length>13?'25px':'32px';
+ q.innerHTML=order.expr+' <small>'+g[1]+'</small>';
+ document.getElementById('t-hint').textContent=order.kind==='set'?'Set the abacus to this number.':'Beads start at '+order.start+' — work to the total.';
+ document.getElementById('t-msg').textContent=' ';document.getElementById('t-msg').className='msg';
+ loadAbacus(order.start);
+}
+function initTrade(){
+ const c=CITIES[S.city];
+ document.getElementById('t-city').textContent=c.city;
+ document.getElementById('t-mon').textContent=c.name;
+ document.getElementById('t-silk').textContent=S.silk;
+ document.getElementById('t-spice').textContent=S.spice;
+ document.getElementById('t-jade').textContent=S.jade;
+ onValue=v=>{document.getElementById('t-cur').textContent=v;};
+ buildAbacus(document.getElementById('trade-frame'),c.digits,layoutFor(c.digits));
+ document.getElementById('t-legend').textContent=legendText();
+ updateTradeProg();newOrder();
+}
+function resetTrade(){loadAbacus(order.start);snd.tap();}
+function updateTradeProg(){const b=S.built[S.city],t=total(S.city);
+ document.getElementById('t-bar').style.width=(b/t*100)+'%';
+ document.getElementById('t-built').textContent=b;document.getElementById('t-total').textContent=t;}
+function submitOrder(){
+ const v=abacusValue();const msg=document.getElementById('t-msg');
+ if(v!==order.target){snd.no();msg.textContent='Not quite — the ledger reads '+v;msg.className='msg no';
+  const w=document.querySelector('#s-trade .abwrap');w.classList.add('shake');setTimeout(()=>w.classList.remove('shake'),340);return;}
+ snd.ok();const c=CITIES[S.city];const g=GOODS[c.good];
+ const reward=rand(2,5);S[g[0]]+=reward;
+ const t=total(S.city);const step=Math.max(1,Math.ceil(t/16));
+ const before=S.built[S.city];S.built[S.city]=Math.min(t,before+step);save();snd.build();
+ document.getElementById('t-'+g[0]).textContent=S[g[0]];
+ msg.innerHTML='✓ Delivered! +'+reward+' '+g[1]+', '+(S.built[S.city]-before)+' blocks raised';msg.className='msg ok';
+ updateTradeProg();
+ if(S.built[S.city]>=t){cityComplete();return;}
+ setTimeout(newOrder,750);
+}
+function cityComplete(){
+ snd.city();const done=S.city;const c=CITIES[done];
+ mapSel=done;go('mon3d');
+ if(done<CITIES.length-1){
+   setTimeout(()=>{alert('🏛️ '+c.name+' complete!\n\nThe caravan rolls on to '+CITIES[done+1].city+' — '+CITIES[done+1].digits+' rods'+(layoutFor(CITIES[done+1].digits)==='ten'&&layoutFor(c.digits)!=='ten'?', now ten-bead columns.':'.'));
+     S.city=done+1;save();},400);
+ }else{setTimeout(()=>alert('🌟 You have reached Constantinople and raised the Hagia Sophia!\n\nThe whole Silk Road is yours, master reckoner.'),400);}
+}
+
+/* ---------- speed ---------- */
+let spScore=0,spTimer=null,spEnd=0,spOrder={};
+function startSpeed(){
+ go('speed');spScore=0;const c=CITIES[S.city];const d=Math.min(4,c.digits);
+ onValue=null;buildAbacus(document.getElementById('speed-frame'),d,layoutFor(d));
+ document.getElementById('sp-legend').textContent=legendText();
+ document.getElementById('sp-score').textContent=0;document.getElementById('sp-msg').textContent=' ';
+ nextSpeed();spEnd=Date.now()+60000;clearInterval(spTimer);
+ spTimer=setInterval(()=>{const left=Math.max(0,Math.ceil((spEnd-Date.now())/1000));
+   document.getElementById('sp-time').textContent='0:'+String(left).padStart(2,'0');
+   if(left<=0){clearInterval(spTimer);endSpeed();}},200);
+}
+function nextSpeed(){const d=Math.min(4,CITIES[S.city].digits);
+ spOrder=makeOrder(d,pick(S.city<=0?['set']:['set','add','sub']));
+ document.getElementById('sp-from').textContent=spOrder.kind==='set'?'Set the abacus to':'Beads start at '+spOrder.start+' — reach';
+ document.getElementById('sp-qty').textContent=spOrder.kind==='set'?spOrder.target:spOrder.expr;
+ document.getElementById('sp-hint').innerHTML='&nbsp;';loadAbacus(spOrder.start);}
+function resetSpeed(){loadAbacus(spOrder.start);snd.tap();}
+function submitSpeed(){
+ if(abacusValue()===spOrder.target){spScore++;snd.ok();document.getElementById('sp-score').textContent=spScore;
+  document.getElementById('sp-msg').textContent='✓';document.getElementById('sp-msg').className='msg ok';nextSpeed();}
+ else{snd.no();document.getElementById('sp-msg').textContent='✗ reads '+abacusValue();document.getElementById('sp-msg').className='msg no';
+  const w=document.querySelector('#s-speed .abwrap');w.classList.add('shake');setTimeout(()=>w.classList.remove('shake'),340);}
+}
+function endSpeed(){if(spScore>S.speedBest){S.speedBest=spScore;save();}
+ document.getElementById('spd-score').textContent=spScore;document.getElementById('spd-best').textContent='Best: '+S.speedBest;go('speeddone');}
+
+/* ---------- map ---------- */
+let mapSel=0;
+function initMap(){if(typeof mapSel!=='number')mapSel=S.city;mapSel=S.city;renderMap();showCityInfo(mapSel);}
+function renderMap(){
+ let s='<svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">';
+ s+='<ellipse cx="210" cy="60" rx="70" ry="34" fill="#1c2c5c" opacity="0.5"/>';
+ s+='<ellipse cx="90" cy="150" rx="55" ry="30" fill="#1c2c5c" opacity="0.5"/>';
+ s+='<polyline points="'+CITIES.map(c=>c.mx+','+c.my).join(' ')+'" fill="none" stroke="#4a5c93" stroke-width="2.5" stroke-dasharray="5 5" stroke-linecap="round"/>';
+ CITIES.forEach((c,i)=>{
+  const done=S.built[i]>=total(i),cur=i===S.city,fill=done?'#33C2AE':cur?'#E4B54E':'#41527f';
+  s+='<g onclick="selectCity('+i+')" style="cursor:pointer">';
+  if(i===mapSel)s+='<circle cx="'+c.mx+'" cy="'+c.my+'" r="11" fill="none" stroke="#F1E9D0" stroke-width="1.5"/>';
+  if(cur)s+='<circle cx="'+c.mx+'" cy="'+c.my+'" r="9" fill="none" stroke="#E4B54E" stroke-width="1.5" opacity="0.55"/>';
+  s+='<circle cx="'+c.mx+'" cy="'+c.my+'" r="6" fill="'+fill+'" stroke="#0C1430" stroke-width="1.5"/>';
+  s+='<text x="'+c.lx+'" y="'+c.ly+'" fill="#C9D3EE" font-size="9" font-weight="600" text-anchor="'+c.la+'" font-family="system-ui">'+c.city+'</text>';
+  s+='</g>';
+ });
+ s+='</svg>';
+ document.getElementById('mapwrap').innerHTML=s;
+}
+function selectCity(i){mapSel=i;renderMap();showCityInfo(i);snd.tap();}
+function showCityInfo(i){
+ const c=CITIES[i],b=S.built[i],t=total(i);
+ const done=b>=t,cur=i===S.city,locked=i>S.city;
+ const badge=done?'<span class="badge done">✓ built</span>':cur?'<span class="badge cur">building now</span>':locked?'<span class="badge lock">not yet reached</span>':'';
+ const lay=layoutFor(c.digits)==='ten'?'ten-bead columns':'soroban (5/4)';
+ document.getElementById('citycard').innerHTML=
+  '<h2>'+c.name+badge+'</h2>'+
+  '<div class="meta">'+(i+1)+' of '+CITIES.length+' · '+c.city+' · '+c.digits+' rods · '+lay+'</div>'+
+  '<p>'+c.blurb+'</p>'+
+  '<div class="prog"><i style="width:'+(b/t*100)+'%"></i></div>'+
+  '<div class="note" style="margin:4px 0 10px">'+b+' / '+t+' blocks raised</div>'+
+  '<button class="btn gold small" style="margin:0" onclick="viewMon3D()">See it in 3D</button>';
+}
+function viewMon3D(){go('mon3d');}
+
+/* ---------- monument 3D ---------- */
+let R3=null;
+const PAL=[0xE4B54E,0xD9B48A,0xC98A3A,0xCBB089,0x33C2AE,0xE0C066,0x8FB4C9,0xC98A5A,0xE4B54E,0x33C2AE];
+function initMon3D(){
+ const c=CITIES[mapSel],b=S.built[mapSel],t=total(mapSel);
+ document.getElementById('m-city').textContent=c.city;
+ document.getElementById('m-name').textContent=c.name;
+ document.getElementById('m-blurb').textContent=c.blurb;
+ document.getElementById('m-bar').style.width=(b/t*100)+'%';
+ document.getElementById('m-built').textContent=b;document.getElementById('m-total').textContent=t;
+ render3D(mapSel,b);
+}
+function render3D(ci,built){
+ const c=CITIES[ci];const host=document.getElementById('mon3d');host.innerHTML='';
+ if(!window.THREE){host.innerHTML='<p class="note" style="padding:120px 20px 0">The 3D city needs one visit with internet first.</p>';return;}
+ const w=host.clientWidth||440,h=300;
+ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio));renderer.setSize(w,h);host.appendChild(renderer.domElement);
+ const scene=new THREE.Scene();scene.add(new THREE.AmbientLight(0xdfe6ff,0.75));
+ const dl=new THREE.DirectionalLight(0xfff2d0,0.85);dl.position.set(12,22,10);scene.add(dl);
+ const group=new THREE.Group();scene.add(group);
+ const geo=new THREE.BoxGeometry(0.95,0.95,0.95);
+ const matOn=new THREE.MeshLambertMaterial({color:PAL[ci]||0xE4B54E});
+ const matGhost=new THREE.MeshBasicMaterial({color:0x6f80b5,transparent:true,opacity:0.12,wireframe:true});
+ const vox=c.vox;let minY=Infinity,maxY=-Infinity;
+ vox.forEach((p,i)=>{const on=i<built;const m=new THREE.Mesh(geo,on?matOn:matGhost);m.position.set(p[0],p[1],p[2]);group.add(m);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
+ group.position.y=-(minY+maxY)/2;
+ const cam=new THREE.PerspectiveCamera(42,w/h,0.1,400);const cr=15;let ang=0.7;
+ function place(){cam.position.set(Math.cos(ang)*cr,7,Math.sin(ang)*cr);cam.lookAt(0,0,0);}place();
+ let raf;function loop(){ang+=0.004;place();renderer.render(scene,cam);raf=requestAnimationFrame(loop);}loop();
+ R3&&R3.stop&&R3.stop();R3={stop:()=>{cancelAnimationFrame(raf);renderer.dispose&&renderer.dispose();}};
+}
+
+/* ---------- settings ---------- */
+function initSettings(){document.getElementById('sw-sfx').classList.toggle('on',S.sfx);document.getElementById('sw-lbl').classList.toggle('on',S.labels);}
+function toggle(k){if(k==='sfx'){S.sfx=!S.sfx;document.getElementById('sw-sfx').classList.toggle('on',S.sfx);}
+ if(k==='labels'){S.labels=!S.labels;document.getElementById('sw-lbl').classList.toggle('on',S.labels);}save();}
+function resetAll(){if(confirm('Reset all progress? Every city returns to its foundations.')){
+ S.silk=S.spice=S.jade=0;S.city=0;S.built=new Array(CITIES.length).fill(0);mapSel=0;save();go('home');}}
+
+/* ---------- boot ---------- */
+refreshHome();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
